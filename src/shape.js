@@ -45,11 +45,12 @@ export function getCustomShapePath(custShapType, w, h) {
 
   let moveToNode = getTextByPathList(pathNodes, ['a:moveTo'])
 
-  const lnToNodes = pathNodes['a:lnTo']
+  let lnToNodes = pathNodes['a:lnTo']
   let cubicBezToNodes = pathNodes['a:cubicBezTo']
   const arcToNodes = pathNodes['a:arcTo']
   let closeNode = getTextByPathList(pathNodes, ['a:close'])
   if (!Array.isArray(moveToNode)) moveToNode = [moveToNode]
+  if (!Array.isArray(lnToNodes)) lnToNodes = [lnToNodes]
 
   const multiSapeAry = []
   if (moveToNode.length > 0) {
@@ -91,9 +92,7 @@ export function getCustomShapePath(custShapType, w, h) {
     }
     if (cubicBezToNodes) {
       const cubicBezToPtNodesAry = []
-      if (!Array.isArray(cubicBezToNodes)) {
-        cubicBezToNodes = [cubicBezToNodes]
-      }
+      if (!Array.isArray(cubicBezToNodes)) cubicBezToNodes = [cubicBezToNodes]
       Object.keys(cubicBezToNodes).forEach(key => {
         cubicBezToPtNodesAry.push(cubicBezToNodes[key]['a:pt'])
       })

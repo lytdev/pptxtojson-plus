@@ -44,6 +44,21 @@ document.querySelector('input').addEventListener('change', evt => {
 })
 ```
 
+### Node.js(实验性，1.5.0以上版本)
+```javascript
+const pptxtojson = require('pptxtojson/dist/index.cjs')
+const fs = require('fs')
+
+async function func() {
+  const buffer = fs.readFileSync('test.pptx')
+
+  const json = await pptxtojson.parse(buffer.buffer)
+  console.log(json)
+}
+
+func()
+```
+
 ### 输出示例
 ```javascript
 {
