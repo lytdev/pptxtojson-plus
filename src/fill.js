@@ -461,7 +461,7 @@ export async function getSlideBackgroundFill(warpObj) {
   }
 }
 
-export async function getShapeFill(node, pNode, isSvgMode, warpObj, source) {
+export async function getShapeFill(node, pNode, isSvgMode, warpObj, source, groupHierarchy = []) {
   const fillType = getFillType(getTextByPathList(node, ['p:spPr']))
   let type = 'color'
   let fillValue = ''
@@ -488,29 +488,68 @@ export async function getShapeFill(node, pNode, isSvgMode, warpObj, source) {
     }
     type = 'image'
   }
+  else if (fillType === 'GROUP_FILL') {
+    return findFillInGroupHierarchy(groupHierarchy, warpObj, source)
+  }
   if (!fillValue) {
     const clrName = getTextByPathList(node, ['p:style', 'a:fillRef'])
     fillValue = getSolidFill(clrName, undefined, undefined, warpObj)
     type = 'color'
   }
-  if (!fillValue && pNode) {
-    const grpFill = getTextByPathList(node, ['p:spPr', 'a:grpFill'])
-    if (grpFill) {
-      const grpShpFill = pNode['p:grpSpPr']
-      if (grpShpFill) {
-        const spShpNode = { 'p:spPr': grpShpFill }
-        return getShapeFill(spShpNode, node, isSvgMode, warpObj, source)
-      }
-    } 
-    else if (fillType === 'NO_FILL') {
-      return isSvgMode ? 'none' : ''
-    }
+  if (!fillValue && pNode && fillType === 'NO_FILL') {
+    return isSvgMode ? 'none' : ''
   }
 
   return {
     type,
     value: fillValue,
   }
+}
+
+async function findFillInGroupHierarchy(groupHierarchy, warpObj, source) {
+  for (const groupNode of groupHierarchy) {
+    if (!groupNode || !groupNode['p:grpSpPr']) continue
+
+    const grpSpPr = groupNode['p:grpSpPr']
+    const fillType = getFillType(grpSpPr)
+
+    if (fillType === 'SOLID_FILL') {
+      const shpFill = grpSpPr['a:solidFill']
+      const fillValue = getSolidFill(shpFill, undefined, undefined, warpObj)
+      if (fillValue) {
+        return {
+          type: 'color',
+          value: fillValue,
+        }
+      }
+    }
+    else if (fillType === 'GRADIENT_FILL') {
+      const shpFill = grpSpPr['a:gradFill']
+      const fillValue = getGradientFill(shpFill, warpObj)
+      if (fillValue) {
+        return {
+          type: 'gradient',
+          value: fillValue,
+        }
+      }
+    }
+    else if (fillType === 'PIC_FILL') {
+      const shpFill = grpSpPr['a:blipFill']
+      const picBase64 = await getPicFill(source, shpFill, warpObj)
+      const opacity = getPicFillOpacity(shpFill)
+      if (picBase64) {
+        return {
+          type: 'image',
+          value: {
+            picBase64,
+            opacity,
+          },
+        }
+      }
+    }
+  }
+
+  return null
 }
 
 export function getSolidFill(solidFill, clrMap, phClr, warpObj) {

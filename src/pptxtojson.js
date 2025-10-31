@@ -399,12 +399,12 @@ function indexNodes(content) {
   return { idTable, idxTable, typeTable }
 }
 
-async function processNodesInSlide(nodeKey, nodeValue, nodes, warpObj, source) {
+async function processNodesInSlide(nodeKey, nodeValue, nodes, warpObj, source, groupHierarchy = []) {
   let json
 
   switch (nodeKey) {
     case 'p:sp': // Shape, Text
-      json = await processSpNode(nodeValue, nodes, warpObj, source)
+      json = await processSpNode(nodeValue, nodes, warpObj, source, groupHierarchy)
       break
     case 'p:cxnSp': // Shape, Text
       json = await processCxnSpNode(nodeValue, nodes, warpObj, source)
@@ -416,11 +416,11 @@ async function processNodesInSlide(nodeKey, nodeValue, nodes, warpObj, source) {
       json = await processGraphicFrameNode(nodeValue, warpObj, source)
       break
     case 'p:grpSp':
-      json = await processGroupSpNode(nodeValue, warpObj, source)
+      json = await processGroupSpNode(nodeValue, warpObj, source, groupHierarchy)
       break
     case 'mc:AlternateContent':
       if (getTextByPathList(nodeValue, ['mc:Fallback', 'p:grpSpPr', 'a:xfrm'])) {
-        json = await processGroupSpNode(getTextByPathList(nodeValue, ['mc:Fallback']), warpObj, source)
+        json = await processGroupSpNode(getTextByPathList(nodeValue, ['mc:Fallback']), warpObj, source, groupHierarchy)
       }
       else if (getTextByPathList(nodeValue, ['mc:Choice'])) {
         json = await processMathNode(nodeValue, warpObj, source)
@@ -466,7 +466,7 @@ async function processMathNode(node, warpObj, source) {
   }
 }
 
-async function processGroupSpNode(node, warpObj, source) {
+async function processGroupSpNode(node, warpObj, source, parentGroupHierarchy = []) {
   const order = node['attrs']['order']
   const xfrmNode = getTextByPathList(node, ['p:grpSpPr', 'a:xfrm'])
   if (!xfrmNode) return null
@@ -489,16 +489,19 @@ async function processGroupSpNode(node, warpObj, source) {
   const ws = cx / chcx
   const hs = cy / chcy
 
+  // 构建当前组合层级（将当前组合添加到父级层级中）
+  const currentGroupHierarchy = [...parentGroupHierarchy, node]
+
   const elements = []
   for (const nodeKey in node) {
     if (node[nodeKey].constructor === Array) {
       for (const item of node[nodeKey]) {
-        const ret = await processNodesInSlide(nodeKey, item, node, warpObj, source)
+        const ret = await processNodesInSlide(nodeKey, item, node, warpObj, source, currentGroupHierarchy)
         if (ret) elements.push(ret)
       }
     }
     else {
-      const ret = await processNodesInSlide(nodeKey, node[nodeKey], node, warpObj, source)
+      const ret = await processNodesInSlide(nodeKey, node[nodeKey], node, warpObj, source, currentGroupHierarchy)
       if (ret) elements.push(ret)
     }
   }
@@ -523,7 +526,7 @@ async function processGroupSpNode(node, warpObj, source) {
   }
 }
 
-async function processSpNode(node, pNode, warpObj, source) {
+async function processSpNode(node, pNode, warpObj, source, groupHierarchy = []) {
   const name = getTextByPathList(node, ['p:nvSpPr', 'p:cNvPr', 'attrs', 'name'])
   const idx = getTextByPathList(node, ['p:nvSpPr', 'p:nvPr', 'p:ph', 'attrs', 'idx'])
   let type = getTextByPathList(node, ['p:nvSpPr', 'p:nvPr', 'p:ph', 'attrs', 'type'])
@@ -558,7 +561,7 @@ async function processSpNode(node, pNode, warpObj, source) {
     else type = 'obj'
   }
 
-  return await genShape(node, pNode, slideLayoutSpNode, slideMasterSpNode, name, type, order, warpObj, source)
+  return await genShape(node, pNode, slideLayoutSpNode, slideMasterSpNode, name, type, order, warpObj, source, groupHierarchy)
 }
 
 async function processCxnSpNode(node, pNode, warpObj, source) {
@@ -569,7 +572,7 @@ async function processCxnSpNode(node, pNode, warpObj, source) {
   return await genShape(node, pNode, undefined, undefined, name, type, order, warpObj, source)
 }
 
-async function genShape(node, pNode, slideLayoutSpNode, slideMasterSpNode, name, type, order, warpObj, source) {
+async function genShape(node, pNode, slideLayoutSpNode, slideMasterSpNode, name, type, order, warpObj, source, groupHierarchy = []) {
   const xfrmList = ['p:spPr', 'a:xfrm']
   const slideXfrmNode = getTextByPathList(node, xfrmList)
   const slideLayoutXfrmNode = getTextByPathList(slideLayoutSpNode, xfrmList)
@@ -598,7 +601,7 @@ async function genShape(node, pNode, slideLayoutSpNode, slideMasterSpNode, name,
   if (node['p:txBody']) content = genTextBody(node['p:txBody'], node, slideLayoutSpNode, type, warpObj)
 
   const { borderColor, borderWidth, borderType, strokeDasharray } = getBorder(node, type, warpObj)
-  const fill = await getShapeFill(node, pNode, undefined, warpObj, source) || ''
+  const fill = await getShapeFill(node, pNode, undefined, warpObj, source, groupHierarchy) || ''
 
   let shadow
   const outerShdwNode = getTextByPathList(node, ['p:spPr', 'a:effectLst', 'a:outerShdw'])
