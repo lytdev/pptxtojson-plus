@@ -1,7 +1,7 @@
 import JSZip from 'jszip'
 import { readXmlFile } from './readXmlFile'
 import { getBorder } from './border'
-import { getSlideBackgroundFill, getShapeFill, getSolidFill, getPicFill } from './fill'
+import { getSlideBackgroundFill, getShapeFill, getSolidFill, getPicFill, getPicFilters } from './fill'
 import { getChartInfo } from './chart'
 import { getVerticalAlign } from './align'
 import { getPosition, getSize } from './position'
@@ -802,11 +802,13 @@ async function processPicNode(node, warpObj, source) {
 
   const { borderColor, borderWidth, borderType, strokeDasharray } = getBorder(node, undefined, warpObj)
 
-  return {
+  const filters = getPicFilters(node['p:blipFill'])
+
+  const imageData = {
     type: 'image',
     top,
     left,
-    width, 
+    width,
     height,
     rotate,
     src,
@@ -820,6 +822,10 @@ async function processPicNode(node, warpObj, source) {
     borderType,
     borderStrokeDasharray: strokeDasharray,
   }
+
+  if (filters) imageData.filters = filters
+
+  return imageData
 }
 
 async function processGraphicFrameNode(node, warpObj, source) {

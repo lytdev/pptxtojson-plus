@@ -165,6 +165,7 @@ func()
 			- 裁剪范围 `rect`
 			- 图片地址（base64） `src`
 			- 旋转角度 `rotate`
+			- 滤镜 `filters`
 
 		- 形状
 			- 类型 `type='shape'`

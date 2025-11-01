@@ -85,6 +85,79 @@ export function getPicFillOpacity(node) {
   return opacity
 }
 
+export function getPicFilters(node) {
+  if (!node) return null
+
+  const aBlipNode = node['a:blip']
+  if (!aBlipNode) return null
+
+  const filters = {}
+
+  // 从a:extLst中获取滤镜效果（Microsoft Office 2010+扩展）
+  const extLstNode = aBlipNode['a:extLst']
+  if (extLstNode && extLstNode['a:ext']) {
+    const extNodes = Array.isArray(extLstNode['a:ext']) ? extLstNode['a:ext'] : [extLstNode['a:ext']]
+
+    for (const extNode of extNodes) {
+      if (!extNode['a14:imgProps'] || !extNode['a14:imgProps']['a14:imgLayer']) continue
+
+      const imgLayerNode = extNode['a14:imgProps']['a14:imgLayer']
+      const imgEffects = imgLayerNode['a14:imgEffect']
+
+      if (!imgEffects) continue
+
+      const effectArray = Array.isArray(imgEffects) ? imgEffects : [imgEffects]
+
+      for (const effect of effectArray) {
+        // 饱和度
+        if (effect['a14:saturation']) {
+          const satAttr = getTextByPathList(effect, ['a14:saturation', 'attrs', 'sat'])
+          if (satAttr) {
+            filters.saturation = parseInt(satAttr) / 100000
+          }
+        }
+
+        // 亮度、对比度
+        if (effect['a14:brightnessContrast']) {
+          const brightAttr = getTextByPathList(effect, ['a14:brightnessContrast', 'attrs', 'bright'])
+          const contrastAttr = getTextByPathList(effect, ['a14:brightnessContrast', 'attrs', 'contrast'])
+
+          if (brightAttr) {
+            filters.brightness = parseInt(brightAttr) / 100000
+          }
+          if (contrastAttr) {
+            filters.contrast = parseInt(contrastAttr) / 100000
+          }
+        }
+
+        // 锐化/柔化
+        if (effect['a14:sharpenSoften']) {
+          const amountAttr = getTextByPathList(effect, ['a14:sharpenSoften', 'attrs', 'amount'])
+          if (amountAttr) {
+            const amount = parseInt(amountAttr) / 100000
+            if (amount > 0) {
+              filters.sharpen = amount
+            }
+            else {
+              filters.soften = Math.abs(amount)
+            }
+          }
+        }
+
+        // 色温
+        if (effect['a14:colorTemperature']) {
+          const tempAttr = getTextByPathList(effect, ['a14:colorTemperature', 'attrs', 'colorTemp'])
+          if (tempAttr) {
+            filters.colorTemperature = parseInt(tempAttr)
+          }
+        }
+      }
+    }
+  }
+
+  return Object.keys(filters).length > 0 ? filters : null
+}
+
 export async function getBgPicFill(bgPr, sorce, warpObj) {
   const picBase64 = await getPicFill(sorce, bgPr['a:blipFill'], warpObj)
   const aBlipNode = bgPr['a:blipFill']['a:blip']

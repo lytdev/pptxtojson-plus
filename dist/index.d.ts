@@ -105,6 +105,13 @@ export interface Image {
   borderWidth: number
   borderType: 'solid' | 'dashed' | 'dotted'
   borderStrokeDasharray: string
+  filters?: {
+    sharpen?: number
+    colorTemperature?: number
+    saturation?: number
+    brightness?: number
+    contrast?: number
+  }
 }
 
 export interface TableCell {
