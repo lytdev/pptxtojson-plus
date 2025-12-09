@@ -7,19 +7,26 @@ import { getVerticalAlign } from './align'
 import { getPosition, getSize } from './position'
 import { genTextBody } from './text'
 import { getCustomShapePath } from './shape'
-import { extractFileExtension, base64ArrayBuffer, getTextByPathList, angleToDegrees, getMimeType, isVideoLink, escapeHtml, hasValidText } from './utils'
+import { base64ArrayBuffer, extractFileExtension, getTextByPathList, angleToDegrees, getMimeType, isVideoLink, escapeHtml, hasValidText } from './utils'
 import { getShadow } from './shadow'
 import { getTableBorders, getTableCellParams, getTableRowParams } from './table'
 import { RATIO_EMUs_Points } from './constants'
 import { findOMath, latexFormart, parseOMath } from './math'
 import { getShapePath } from './shapePath'
 import { parseTransition, findTransitionNode } from './animation'
-
-export async function parse(file) {
+// 外部用于上传图片、视频、音频的函数
+let uploadFun
+/**
+ * 执行解析文件
+ * @param {*} file 
+ * @param {*} uploadCallback 
+ * @returns 
+ */
+export async function parse(file, uploadCallback) {
   const slides = []
   
   const zip = await JSZip.loadAsync(file)
-
+  uploadFun = uploadCallback
   const filesInfo = await getContentTypes(zip)
   const { width, height, defaultTextStyle } = await getSlideInfo(zip)
   const { themeContent, themeColors } = await getTheme(zip)
@@ -272,7 +279,7 @@ async function processSingleSlide(zip, sldFileName, themeContent, defaultTextSty
     defaultTextStyle,
   }
   const layoutElements = await getLayoutElements(warpObj)
-  const fill = await getSlideBackgroundFill(warpObj)
+  const fill = await getSlideBackgroundFill(warpObj, uploadFun)
 
   const elements = []
   for (const nodeKey in nodes) {
@@ -453,7 +460,8 @@ async function processMathNode(node, warpObj, source) {
   const latex = latexFormart(parseOMath(oMath))
 
   const blipFill = getTextByPathList(fallback, ['p:sp', 'p:spPr', 'a:blipFill'])
-  const picBase64 = await getPicFill(source, blipFill, warpObj)
+
+  const picBase64 = await getPicFill(source, blipFill, warpObj, uploadFun)
 
   let text = ''
   if (getTextByPathList(choice, ['p:sp', 'p:txBody', 'a:p', 'a:r'])) {
@@ -705,10 +713,19 @@ async function processPicNode(node, warpObj, source) {
     if (idx) xfrmNode = getTextByPathList(warpObj['slideLayoutTables'], ['idxTable', idx, 'p:spPr', 'a:xfrm'])
   }
 
-  const mimeType = getMimeType(imgFileExt)
+  const imgMimeType = getMimeType(imgFileExt)
   const { top, left } = getPosition(xfrmNode, undefined, undefined)
   const { width, height } = getSize(xfrmNode, undefined, undefined)
-  const src = `data:${mimeType};base64,${base64ArrayBuffer(imgArrayBuffer)}`
+  // 执行上传函数
+  let src = ''
+  if (uploadFun) {
+    const uploadResp = await uploadFun(new Blob([imgArrayBuffer], { type: imgMimeType }), imgFileExt)
+    src = uploadResp.url
+  }
+  else {
+    src = `data:${imgMimeType};base64,${base64ArrayBuffer(imgArrayBuffer)}`
+  }
+ 
 
   const isFlipV = getTextByPathList(xfrmNode, ['attrs', 'flipV']) === '1'
   const isFlipH = getTextByPathList(xfrmNode, ['attrs', 'flipH']) === '1'
@@ -733,22 +750,24 @@ async function processPicNode(node, warpObj, source) {
       if (videoFileExt === 'mp4' || videoFileExt === 'webm' || videoFileExt === 'ogg') {
         uInt8ArrayVideo = await zip.file(videoFile).async('arraybuffer')
         videoMimeType = getMimeType(videoFileExt)
-        videoBlob = URL.createObjectURL(new Blob([uInt8ArrayVideo], {
-          type: videoMimeType
-        }))
+        // 传入上传文件的方法
+        const uploadResp = await uploadFun(new Blob([uInt8ArrayVideo], { type: videoMimeType }), videoFileExt)
+        videoBlob = uploadResp.url
       }
     }
   }
 
   const audioNode = getTextByPathList(node, ['p:nvPicPr', 'p:nvPr', 'a:audioFile'])
-  let audioRid, audioFile, audioFileExt, uInt8ArrayAudio, audioBlob
+  let audioRid, audioFile, audioFileExt, uInt8ArrayAudio, audioBlob, audioMimeType
   if (audioNode) {
     audioRid = audioNode['attrs']['r:link']
     audioFile = resObj[audioRid]['target']
     audioFileExt = extractFileExtension(audioFile).toLowerCase()
     if (audioFileExt === 'mp3' || audioFileExt === 'wav' || audioFileExt === 'ogg') {
       uInt8ArrayAudio = await zip.file(audioFile).async('arraybuffer')
-      audioBlob = URL.createObjectURL(new Blob([uInt8ArrayAudio]))
+      audioMimeType = getMimeType(audioFileExt)
+      const uploadResp = await uploadFun(new Blob([uInt8ArrayAudio], { type: audioMimeType }), audioFileExt)
+      audioBlob = uploadResp.url
     }
   }
 

@@ -32,7 +32,7 @@ export function getFillType(node) {
   return fillType
 }
 
-export async function getPicFill(type, node, warpObj) {
+export async function getPicFill(type, node, warpObj, uploadFun) {
   if (!node) return ''
 
   let img
@@ -64,8 +64,13 @@ export async function getPicFill(type, node, warpObj) {
 
     const imgArrayBuffer = await warpObj['zip'].file(imgPath).async('arraybuffer')
     const imgMimeType = getMimeType(imgExt)
-    img = `data:${imgMimeType};base64,${base64ArrayBuffer(imgArrayBuffer)}`
-
+    if (uploadFun) {
+      const uploadResp = await uploadFun(new Blob([imgArrayBuffer], { type: imgMimeType }), imgExt)
+      img = uploadResp.url
+    }
+    else {
+      img = `data:${imgMimeType};base64,${base64ArrayBuffer(imgArrayBuffer)}`
+    }
     const loadedImages = warpObj['loaded-images'] || {}
     loadedImages[imgPath] = img
     warpObj['loaded-images'] = loadedImages
@@ -158,8 +163,8 @@ export function getPicFilters(node) {
   return Object.keys(filters).length > 0 ? filters : null
 }
 
-export async function getBgPicFill(bgPr, sorce, warpObj) {
-  const picBase64 = await getPicFill(sorce, bgPr['a:blipFill'], warpObj)
+export async function getBgPicFill(bgPr, sorce, warpObj, uploadFun) {
+  const picBase64 = await getPicFill(sorce, bgPr['a:blipFill'], warpObj, uploadFun)
   const aBlipNode = bgPr['a:blipFill']['a:blip']
 
   const aphaModFixNode = getTextByPathList(aBlipNode, ['a:alphaModFix', 'attrs'])
@@ -236,7 +241,7 @@ export function getBgGradientFill(bgPr, phClr, slideMasterContent, warpObj) {
   return null
 }
 
-export async function getSlideBackgroundFill(warpObj) {
+export async function getSlideBackgroundFill(warpObj, uploadFun) {
   const slideContent = warpObj['slideContent']
   const slideLayoutContent = warpObj['slideLayoutContent']
   const slideMasterContent = warpObj['slideMasterContent']
@@ -274,7 +279,7 @@ export async function getSlideBackgroundFill(warpObj) {
       }
     }
     else if (bgFillTyp === 'PIC_FILL') {
-      background = await getBgPicFill(bgPr, 'slideBg', warpObj)
+      background = await getBgPicFill(bgPr, 'slideBg', warpObj, uploadFun)
       backgroundType = 'image'
     }
   }
