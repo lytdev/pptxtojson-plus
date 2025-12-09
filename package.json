@@ -1,15 +1,16 @@
 {
 	"name": "pptxtojson-plus",
-	"version": "1.7.1",
-	"description": "A javascript tool for parsing .pptx file",
+	"version": "1.7.3",
+	 "files": ["dist"],
+	"description": "A  javascript tool for parsing .pptx file",
 	"type": "module",
 	"main": "./dist/index.umd.js",
 	"module": "./dist/index.js",
 	"types": "./dist/index.d.ts",
 	"scripts": {
-		"clean:dist": "rimraf dist",
 		"dev": "rollup -c -w",
 		"lint": "eslint src --ext .js,.jsx,.ts,.tsx",
+		"prepack": "npm run build",
 		"build": "rollup --config"
 	},
 	"author": "lytdev@outlook.com",
@@ -28,9 +29,9 @@
 		"registry": "https://registry.npmjs.org"
 	},
 	"dependencies": {
-		"jszip": "^3.10.1",
+		"jszip": "3.10.1",
 		"tinycolor2": "1.6.0",
-		"txml": "^5.1.1"
+		"txml": "5.2.1"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.20.2",

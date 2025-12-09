@@ -7,7 +7,7 @@ import { getVerticalAlign } from './align'
 import { getPosition, getSize } from './position'
 import { genTextBody } from './text'
 import { getCustomShapePath } from './shape'
-import { base64ArrayBuffer, extractFileExtension, getTextByPathList, angleToDegrees, getMimeType, isVideoLink, escapeHtml, hasValidText } from './utils'
+import { base64ArrayBuffer, extractFileExtension, getTextByPathList, angleToDegrees, getMimeType, isVideoLink, escapeHtml, hasValidText, fastUuid } from './utils'
 import { getShadow } from './shadow'
 import { getTableBorders, getTableCellParams, getTableRowParams } from './table'
 import { RATIO_EMUs_Points } from './constants'
@@ -17,12 +17,12 @@ import { parseTransition, findTransitionNode } from './animation'
 // 外部用于上传图片、视频、音频的函数
 let uploadFun
 /**
- * 执行解析文件
+ * 执行解析文件主方法
  * @param {*} file 
  * @param {*} uploadCallback 
  * @returns 
  */
-export async function parse(file, uploadCallback) {
+export async function pptxToJson(file, uploadCallback) {
   const slides = []
   
   const zip = await JSZip.loadAsync(file)
@@ -287,6 +287,7 @@ async function processSingleSlide(zip, sldFileName, themeContent, defaultTextSty
     for (const node of nodes[nodeKey]) {
       const ret = await processNodesInSlide(nodeKey, node, nodes, warpObj, 'slide')
       if (ret) elements.push(ret)
+      
     }
   }
 
@@ -430,7 +431,7 @@ async function processNodesInSlide(nodeKey, nodeValue, nodes, warpObj, source, g
     case 'p:graphicFrame': // Chart, Diagram, Table
       json = await processGraphicFrameNode(nodeValue, warpObj, source)
       break
-    case 'p:grpSp':
+    case 'p:grpSp':// 组合图形
       json = await processGroupSpNode(nodeValue, warpObj, source, groupHierarchy)
       break
     case 'mc:AlternateContent':
@@ -470,6 +471,7 @@ async function processMathNode(node, warpObj, source) {
   }
 
   return {
+    id: fastUuid(),
     type: 'math',
     top,
     left,
@@ -523,6 +525,7 @@ async function processGroupSpNode(node, warpObj, source, parentGroupHierarchy = 
   }
 
   return {
+    id: fastUuid(),
     type: 'group',
     top: y,
     left: x,
@@ -627,6 +630,7 @@ async function genShape(node, pNode, slideLayoutSpNode, slideMasterSpNode, name,
   const isVertical = getTextByPathList(node, ['p:txBody', 'a:bodyPr', 'attrs', 'vert']) === 'eaVert'
 
   const data = {
+    id: fastUuid(),
     left,
     top,
     width,
@@ -771,40 +775,36 @@ async function processPicNode(node, warpObj, source) {
     }
   }
 
+  const picNodeData = {
+    id: fastUuid(),
+    top,
+    left,
+    width, 
+    height,
+    rotate,
+    order
+  }
+
   if (videoNode && !isVdeoLink) {
     return {
       type: 'video',
-      top,
-      left,
-      width, 
-      height,
-      rotate,
+      ...picNodeData,
       blob: videoBlob,
-      order,
     }
   } 
   if (videoNode && isVdeoLink) {
     return {
       type: 'video',
-      top,
-      left,
-      width, 
-      height,
-      rotate,
+      ...picNodeData,
       src: videoFile,
-      order,
+
     }
   }
   if (audioNode) {
     return {
       type: 'audio',
-      top,
-      left,
-      width, 
-      height,
-      rotate,
-      blob: audioBlob,
-      order,
+      ...picNodeData,
+      blob: audioBlob
     }
   }
 
@@ -824,6 +824,7 @@ async function processPicNode(node, warpObj, source) {
   const filters = getPicFilters(node['p:blipFill'])
 
   const imageData = {
+    id: fastUuid(),
     type: 'image',
     top,
     left,
@@ -868,6 +869,7 @@ async function processGraphicFrameNode(node, warpObj, source) {
       break
     default:
   }
+  result.id = fastUuid()
   return result
 }
 

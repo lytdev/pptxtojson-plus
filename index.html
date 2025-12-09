@@ -387,7 +387,7 @@
         if (files && files[0]) {
           const reader = new FileReader()
           reader.onload = async e => {
-            const json = await pptxtojson.parse(e.target.result,uploadOss)
+            const json = await pptxtojson.pptxToJson(e.target.result,uploadOss)
             editor.set(json)
             console.log(json)
             jsonString = JSON.stringify(json, null, 2)
