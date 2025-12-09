@@ -711,3 +711,42 @@ export function getSolidFill(solidFill, clrMap, phClr, warpObj) {
 
   return color
 }
+
+export function createGradientText(colors, rot = 90) {
+  const gradientStops = colors
+    .map((stop) => {
+      return `${stop.color} ${stop.pos}`
+    })
+    .join(', ')
+
+  const gradientStyle = `linear-gradient(${rot}deg, ${gradientStops})`
+
+  return `background: ${gradientStyle};
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;`
+}
+export function getGradFill(solidFill, clrMap, phClr, warpObj) {
+  const grdFill = solidFill['a:gradFill']
+  const gsLst = grdFill['a:gsLst']['a:gs']
+  const color_ary = []
+
+  for (let i = 0; i < gsLst.length; i++) {
+    const lo_color = getSolidFill(gsLst[i], clrMap, phClr, warpObj)
+    const pos = getTextByPathList(gsLst[i], ['attrs', 'pos'])
+
+    color_ary[i] = {
+      pos: pos ? pos / 1000 + '%' : '',
+      color: lo_color,
+    }
+  }
+  const lin = grdFill['a:lin']
+  let rot = 90
+  if (lin) {
+    rot = angleToDegrees(lin['attrs']['ang'])
+    rot = rot + 90
+  }
+  const colors = color_ary.sort((a, b) => parseInt(a.pos) - parseInt(b.pos))
+  return createGradientText(colors, rot)
+}
