@@ -53,11 +53,19 @@ export function eachElement(node, func) {
   return result
 }
 
+/**
+ * 根据路径列表从对象中获取值
+ * @param {Object} node - 要遍历的对象节点
+ * @param {Array} path - 包含键名的数组，表示要访问的路径
+ * @returns {*} 返回找到的值，如果路径中的任何键不存在则返回undefined
+ */
 export function getTextByPathList(node, path) {
   if (!node) return node
 
+  // 遍历路径中的每个键
   for (const key of path) {
     node = node[key]
+    // 如果节点不存在，则返回undefined
     if (!node) return node
   }
 
