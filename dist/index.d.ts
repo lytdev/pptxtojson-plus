@@ -38,12 +38,17 @@ export interface Border {
   borderType: "solid" | "dashed" | "dotted";
 }
 
-export interface Shape {
-  type: "shape";
+export interface BaseAttribute {
+  id: string
   left: number;
   top: number;
   width: number;
   height: number;
+  order?: number;
+}
+
+export interface Shape extends BaseAttribute {
+  type: "shape";
   borderColor: string;
   borderWidth: number;
   borderType: "solid" | "dashed" | "dotted";
@@ -58,15 +63,10 @@ export interface Shape {
   vAlign: string;
   path?: string;
   name: string;
-  order: number;
 }
 
-export interface Text {
+export interface Text extends BaseAttribute {
   type: "text";
-  left: number;
-  top: number;
-  width: number;
-  height: number;
   borderColor: string;
   borderWidth: number;
   borderType: "solid" | "dashed" | "dotted";
@@ -80,20 +80,14 @@ export interface Text {
   content: string;
   vAlign: string;
   name: string;
-  order: number;
 }
 
-export interface Image {
+export interface Image extends BaseAttribute {
   type: "image";
-  left: number;
-  top: number;
-  width: number;
-  height: number;
   src: string;
   rotate: number;
   isFlipH: boolean;
   isFlipV: boolean;
-  order: number;
   rect?: {
     t?: number;
     b?: number;
@@ -130,12 +124,8 @@ export interface TableCell {
     right?: Border;
   };
 }
-export interface Table {
+export interface Table extends BaseAttribute {
   type: "table";
-  left: number;
-  top: number;
-  width: number;
-  height: number;
   data: TableCell[][];
   borders: {
     top?: Border;
@@ -143,7 +133,6 @@ export interface Table {
     left?: Border;
     right?: Border;
   };
-  order: number;
   rowHeights: number[];
   colWidths: number[];
 }
@@ -178,12 +167,8 @@ export interface ChartItem {
   xlabels: ChartXLabel;
 }
 export type ScatterChartData = [number[], number[]];
-export interface CommonChart {
+export interface CommonChart extends BaseAttribute {
   type: "chart";
-  left: number;
-  top: number;
-  width: number;
-  height: number;
   data: ChartItem[];
   colors: string[];
   chartType: Exclude<ChartType, "scatterChart" | "bubbleChart">;
@@ -192,61 +177,36 @@ export interface CommonChart {
   holeSize?: string;
   grouping?: string;
   style?: string;
-  order: number;
 }
-export interface ScatterChart {
+export interface ScatterChart extends BaseAttribute {
   type: "chart";
-  left: number;
-  top: number;
-  width: number;
-  height: number;
   data: ScatterChartData;
   colors: string[];
   chartType: "scatterChart" | "bubbleChart";
-  order: number;
+ 
 }
 export type Chart = CommonChart | ScatterChart;
 
-export interface Video {
+export interface Video extends BaseAttribute {
   type: "video";
-  left: number;
-  top: number;
-  width: number;
-  height: number;
   blob?: string;
   src?: string;
-  order: number;
 }
 
-export interface Audio {
+export interface Audio extends BaseAttribute {
   type: "audio";
-  left: number;
-  top: number;
-  width: number;
-  height: number;
   blob: string;
-  order: number;
 }
 
-export interface Diagram {
+export interface Diagram extends BaseAttribute {
   type: "diagram";
-  left: number;
-  top: number;
-  width: number;
-  height: number;
   elements: (Shape | Text)[];
-  order: number;
 }
 
-export interface Math {
+export interface Math extends BaseAttribute {
   type: "math";
-  left: number;
-  top: number;
-  width: number;
-  height: number;
   latex: string;
   picBase64: string;
-  order: number;
   text?: string;
 }
 
@@ -261,15 +221,10 @@ export type BaseElement =
   | Diagram
   | Math;
 
-export interface Group {
+export interface Group extends BaseAttribute {
   type: "group";
-  left: number;
-  top: number;
-  width: number;
-  height: number;
   rotate: number;
   elements: BaseElement[];
-  order: number;
   isFlipH: boolean;
   isFlipV: boolean;
 }
