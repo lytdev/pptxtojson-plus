@@ -537,10 +537,10 @@ async function processGroupSpNode(node, warpObj, source, parentGroupHierarchy = 
     isFlipH,
     elements: elements.map(element => ({
       ...element,
-      left: (element.left - chx) * ws,
-      top: (element.top - chy) * hs,
-      width: element.width * ws,
-      height: element.height * hs,
+      left: fixedRound((element.left - chx) * ws, 2),
+      top: fixedRound((element.top - chy) * hs, 2),
+      width: fixedRound(element.width * ws, 2),
+      height: fixedRound(element.height * hs, 2),
     }))
   }
 }
