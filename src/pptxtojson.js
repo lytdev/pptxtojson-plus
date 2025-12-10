@@ -7,7 +7,7 @@ import { getVerticalAlign } from './align'
 import { getPosition, getSize } from './position'
 import { genTextBody } from './text'
 import { getCustomShapePath } from './shape'
-import { base64ArrayBuffer, extractFileExtension, getTextByPathList, angleToDegrees, getMimeType, isVideoLink, escapeHtml, hasValidText, fastUuid } from './utils'
+import { base64ArrayBuffer, extractFileExtension, getTextByPathList, angleToDegrees, getMimeType, isVideoLink, escapeHtml, hasValidText, fastUuid, fixedRound } from './utils'
 import { getShadow } from './shadow'
 import { getTableBorders, getTableCellParams, getTableRowParams } from './table'
 import { RATIO_EMUs_Points } from './constants'
@@ -489,14 +489,14 @@ async function processGroupSpNode(node, warpObj, source, parentGroupHierarchy = 
   const xfrmNode = getTextByPathList(node, ['p:grpSpPr', 'a:xfrm'])
   if (!xfrmNode) return null
 
-  const x = parseInt(xfrmNode['a:off']['attrs']['x']) * RATIO_EMUs_Points
-  const y = parseInt(xfrmNode['a:off']['attrs']['y']) * RATIO_EMUs_Points
-  const chx = parseInt(xfrmNode['a:chOff']['attrs']['x']) * RATIO_EMUs_Points
-  const chy = parseInt(xfrmNode['a:chOff']['attrs']['y']) * RATIO_EMUs_Points
-  const cx = parseInt(xfrmNode['a:ext']['attrs']['cx']) * RATIO_EMUs_Points
-  const cy = parseInt(xfrmNode['a:ext']['attrs']['cy']) * RATIO_EMUs_Points
-  const chcx = parseInt(xfrmNode['a:chExt']['attrs']['cx']) * RATIO_EMUs_Points
-  const chcy = parseInt(xfrmNode['a:chExt']['attrs']['cy']) * RATIO_EMUs_Points
+  const x = fixedRound(parseInt(xfrmNode['a:off']['attrs']['x']) * RATIO_EMUs_Points, 2)
+  const y = fixedRound(parseInt(xfrmNode['a:off']['attrs']['y']) * RATIO_EMUs_Points, 2)
+  const chx = fixedRound(parseInt(xfrmNode['a:chOff']['attrs']['x']) * RATIO_EMUs_Points, 2)
+  const chy = fixedRound(parseInt(xfrmNode['a:chOff']['attrs']['y']) * RATIO_EMUs_Points, 2)
+  const cx = fixedRound(parseInt(xfrmNode['a:ext']['attrs']['cx']) * RATIO_EMUs_Points, 2)
+  const cy = fixedRound(parseInt(xfrmNode['a:ext']['attrs']['cy']) * RATIO_EMUs_Points, 2)
+  const chcx = fixedRound(parseInt(xfrmNode['a:chExt']['attrs']['cx']) * RATIO_EMUs_Points, 2)
+  const chcy = fixedRound(parseInt(xfrmNode['a:chExt']['attrs']['cy']) * RATIO_EMUs_Points, 2)
 
   const isFlipV = getTextByPathList(xfrmNode, ['attrs', 'flipV']) === '1'
   const isFlipH = getTextByPathList(xfrmNode, ['attrs', 'flipH']) === '1'
