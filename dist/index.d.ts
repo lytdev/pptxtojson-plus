@@ -44,7 +44,7 @@ export interface BaseAttribute {
   top: number;
   width: number;
   height: number;
-  order?: number;
+  order: number;
 }
 
 export interface Shape extends BaseAttribute {
@@ -183,7 +183,6 @@ export interface ScatterChart extends BaseAttribute {
   data: ScatterChartData;
   colors: string[];
   chartType: "scatterChart" | "bubbleChart";
- 
 }
 export type Chart = CommonChart | ScatterChart;
 
