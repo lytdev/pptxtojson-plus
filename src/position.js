@@ -1,4 +1,5 @@
 import { RATIO_EMUs_Points } from './constants'
+import { fixedRound } from './utils'
 
 export function getPosition(slideSpNode, slideLayoutSpNode, slideMasterSpNode) {
   let off
@@ -10,8 +11,8 @@ export function getPosition(slideSpNode, slideLayoutSpNode, slideMasterSpNode) {
   if (!off) return { top: 0, left: 0 }
 
   return {
-    top: parseInt(off['y']) * RATIO_EMUs_Points,
-    left: parseInt(off['x']) * RATIO_EMUs_Points,
+    top: fixedRound(parseInt(off['y']) * RATIO_EMUs_Points, 2),
+    left: fixedRound(parseInt(off['x']) * RATIO_EMUs_Points, 2),
   }
 }
 
@@ -25,7 +26,7 @@ export function getSize(slideSpNode, slideLayoutSpNode, slideMasterSpNode) {
   if (!ext) return { width: 0, height: 0 }
 
   return {
-    width: parseInt(ext['cx']) * RATIO_EMUs_Points,
-    height: parseInt(ext['cy']) * RATIO_EMUs_Points,
+    width: fixedRound(parseInt(ext['cx']) * RATIO_EMUs_Points, 2),
+    height: fixedRound(parseInt(ext['cy']) * RATIO_EMUs_Points, 2),
   }
 }

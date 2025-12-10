@@ -197,3 +197,12 @@ export function fastUuid() {
   const uid = uuid()
   return uid.replace(/-/g, '')
 }
+/**
+ * float保留指定位数
+ * @param {*} num 
+ * @param {*} decimal
+ * @returns 
+ */
+export function fixedRound(num, decimal = 0) {
+  return parseFloat(num.toFixed(decimal))
+}
