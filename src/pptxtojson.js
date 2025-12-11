@@ -14,6 +14,8 @@ import { RATIO_EMUs_Points } from './constants'
 import { findOMath, latexFormart, parseOMath } from './math'
 import { getShapePath } from './shapePath'
 import { parseTransition, findTransitionNode } from './animation'
+import { getNote } from './note'
+
 // 外部用于上传图片、视频、音频的函数
 let uploadFun
 /**
@@ -174,7 +176,6 @@ async function processSingleSlide(zip, sldFileName, themeContent, defaultTextSty
   
   const slideNotesContent = await readXmlFile(zip, noteFilename)
   const note = getNote(slideNotesContent)
-
   const slideLayoutContent = await readXmlFile(zip, layoutFilename)
   const slideLayoutTables = await indexNodes(slideLayoutContent)
   const slideLayoutResFilename = layoutFilename.replace('slideLayouts/slideLayout', 'slideLayouts/_rels/slideLayout') + '.rels'
@@ -306,24 +307,6 @@ async function processSingleSlide(zip, sldFileName, themeContent, defaultTextSty
   }
 }
 
-function getNote(noteContent) {
-  let text = ''
-  let spNodes = getTextByPathList(noteContent, ['p:notes', 'p:cSld', 'p:spTree', 'p:sp'])
-  if (!spNodes) return ''
-
-  if (spNodes.constructor !== Array) spNodes = [spNodes]
-  for (const spNode of spNodes) {
-    let rNodes = getTextByPathList(spNode, ['p:txBody', 'a:p', 'a:r'])
-    if (!rNodes) continue
-
-    if (rNodes.constructor !== Array) rNodes = [rNodes]
-    for (const rNode of rNodes) {
-      const t = getTextByPathList(rNode, ['a:t'])
-      if (t && typeof t === 'string') text += t
-    }
-  }
-  return text
-}
 
 async function getLayoutElements(warpObj) {
   const elements = []
