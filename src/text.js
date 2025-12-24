@@ -73,7 +73,7 @@ export function genTextBody(textBodyNode, spNode, slideLayoutSpNode, type, warpO
       text += `<p style="text-align: ${align};">`;
     }
 
-    if (!rNode)
+    if (!rNode) {
       text += genSpanElement(
         pNode,
         spNode,
@@ -83,9 +83,11 @@ export function genTextBody(textBodyNode, spNode, slideLayoutSpNode, type, warpO
         type,
         warpObj,
       );
-    else {
+    } else {
+      let prevStyleInfo = null;
+      let accumulatedText = "";
       for (const rNodeItem of rNode) {
-        text += genSpanElement(
+        const styleInfo = getSpanStyleInfo(
           rNodeItem,
           pNode,
           textBodyNode,
@@ -94,6 +96,39 @@ export function genTextBody(textBodyNode, spNode, slideLayoutSpNode, type, warpO
           type,
           warpObj,
         );
+
+        if (
+          !prevStyleInfo ||
+          prevStyleInfo.styleText !== styleInfo.styleText ||
+          prevStyleInfo.hasLink !== styleInfo.hasLink ||
+          styleInfo.hasLink
+        ) {
+          if (accumulatedText) {
+            const processedText = accumulatedText
+              .replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;")
+              .replace(/\s/g, "&nbsp;");
+            text += `<span style="${prevStyleInfo.styleText}">${processedText}</span>`;
+            accumulatedText = "";
+          }
+
+          if (styleInfo.hasLink) {
+            const processedText = styleInfo.text
+              .replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;")
+              .replace(/\s/g, "&nbsp;");
+            text += `<span style="${styleInfo.styleText}"><a href="${styleInfo.linkURL}" target="_blank">${processedText}</a></span>`;
+            prevStyleInfo = null;
+          } else {
+            prevStyleInfo = styleInfo;
+            accumulatedText = styleInfo.text;
+          }
+        } else accumulatedText += styleInfo.text;
+      }
+
+      if (accumulatedText && prevStyleInfo) {
+        const processedText = accumulatedText
+          .replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;")
+          .replace(/\s/g, "&nbsp;");
+        text += `<span style="${prevStyleInfo.styleText}">${processedText}</span>`;
       }
     }
 
@@ -114,6 +149,32 @@ export function getListType(node) {
 }
 
 export function genSpanElement(
+  node,
+  pNode,
+  textBodyNode,
+  pFontStyle,
+  slideLayoutSpNode,
+  type,
+  warpObj,
+) {
+  const { styleText, text, hasLink, linkURL } = getSpanStyleInfo(
+    node,
+    pNode,
+    textBodyNode,
+    pFontStyle,
+    slideLayoutSpNode,
+    type,
+    warpObj,
+  );
+  const processedText = text.replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;").replace(/\s/g, "&nbsp;");
+
+  if (hasLink) {
+    return `<span style="${styleText}"><a href="${linkURL}" target="_blank">${processedText}</a></span>`;
+  }
+  return `<span style="${styleText}">${processedText}</span>`;
+}
+
+export function getSpanStyleInfo(
   node,
   pNode,
   textBodyNode,
@@ -158,7 +219,7 @@ export function genSpanElement(
     else if (fontColor.colors) {
       const { colors, rot } = fontColor;
       const stops = colors.map((item) => `${item.color} ${item.pos}`).join(", ");
-      const gradientStyle = `linear-gradient(${rot}deg, ${stops})`;
+      const gradientStyle = `linear-gradient(${rot + 90}deg, ${stops})`;
       styleText += `background: ${gradientStyle}; background-clip: text; color: transparent;`;
     }
   }
@@ -184,9 +245,12 @@ export function genSpanElement(
   }
 
   const linkID = getTextByPathList(node, ["a:rPr", "a:hlinkClick", "attrs", "r:id"]);
-  if (linkID && warpObj["slideResObj"][linkID]) {
-    const linkURL = warpObj["slideResObj"][linkID]["target"];
-    return `<span style="${styleText}"><a href="${linkURL}" target="_blank">${text.replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;").replace(/\s/g, "&nbsp;")}</a></span>`;
-  }
-  return `<span style="${styleText}">${text.replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;").replace(/\s/g, "&nbsp;")}</span>`;
+  const hasLink = linkID && warpObj["slideResObj"][linkID];
+
+  return {
+    styleText,
+    text,
+    hasLink,
+    linkURL: hasLink ? warpObj["slideResObj"][linkID]["target"] : null,
+  };
 }
