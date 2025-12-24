@@ -211,6 +211,6 @@ export function fastUuid() {
  * @param {*} decimal
  * @returns 
  */
-export function fixedRound(num, decimal = 0) {
+export function fixedRound(num, decimal = 2) {
   return parseFloat(num.toFixed(decimal))
 }

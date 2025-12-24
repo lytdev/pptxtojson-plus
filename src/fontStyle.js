@@ -1,6 +1,6 @@
 import { getTextByPathList } from './utils'
 import { getShadow } from './shadow'
-import { getFillType, getSolidFill } from './fill'
+import { getFillType,getGradientFill, getSolidFill } from './fill'
 /**
  * 获取节点的字体类型
  * 
@@ -64,6 +64,11 @@ export function getFontColor(node, pNode, lstStyle, pFontStyle, lvl, warpObj) {
     if (filTyp === 'SOLID_FILL') {
       const solidFillNode = rPrNode['a:solidFill']
       color = getSolidFill(solidFillNode, undefined, undefined, warpObj)
+    }
+    if (filTyp === 'GRADIENT_FILL') {
+      const gradientFillNode = rPrNode['a:gradFill']
+      const gradient = getGradientFill(gradientFillNode, warpObj)
+      return gradient
     }
   }
   // 如果当前节点没有颜色，则尝试从列表样式中获取
