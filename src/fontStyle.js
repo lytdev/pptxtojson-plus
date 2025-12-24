@@ -1,6 +1,6 @@
 import { getTextByPathList } from './utils'
 import { getShadow } from './shadow'
-import { getFillType,getGradientFill, getSolidFill } from './fill'
+import { getFillType, getGradientFill, getSolidFill } from './fill'
 /**
  * 获取节点的字体类型
  * 

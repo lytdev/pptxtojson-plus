@@ -1,5 +1,5 @@
-import { getHorizontalAlign } from "./align";
-import { getTextByPathList } from "./utils";
+import { getHorizontalAlign } from './align'
+import { getTextByPathList } from './utils'
 
 import {
   getFontType,
@@ -12,65 +12,67 @@ import {
   getFontSpace,
   getFontSubscript,
   getFontShadow,
-} from "./fontStyle";
+} from './fontStyle'
 
-import { getFillType, getGradFill } from "./fill";
+import { getFillType, getGradFill } from './fill'
 
 export function genTextBody(textBodyNode, spNode, slideLayoutSpNode, type, warpObj) {
-  if (!textBodyNode) return "";
+  if (!textBodyNode) return ''
 
-  let text = "";
+  let text = ''
 
-  const pFontStyle = getTextByPathList(spNode, ["p:style", "a:fontRef"]);
+  const pFontStyle = getTextByPathList(spNode, ['p:style', 'a:fontRef'])
 
-  const pNode = textBodyNode["a:p"];
-  const pNodes = pNode.constructor === Array ? pNode : [pNode];
+  const pNode = textBodyNode['a:p']
+  const pNodes = pNode.constructor === Array ? pNode : [pNode]
 
-  let isList = "";
+  let isList = ''
 
   for (const pNode of pNodes) {
-    let rNode = pNode["a:r"];
-    let fldNode = pNode["a:fld"];
-    let brNode = pNode["a:br"];
+    let rNode = pNode['a:r']
+    let fldNode = pNode['a:fld']
+    let brNode = pNode['a:br']
     if (rNode) {
-      rNode = rNode.constructor === Array ? rNode : [rNode];
+      rNode = rNode.constructor === Array ? rNode : [rNode]
 
       if (fldNode) {
-        fldNode = fldNode.constructor === Array ? fldNode : [fldNode];
-        rNode = rNode.concat(fldNode);
+        fldNode = fldNode.constructor === Array ? fldNode : [fldNode]
+        rNode = rNode.concat(fldNode)
       }
       if (brNode) {
-        brNode = brNode.constructor === Array ? brNode : [brNode];
-        brNode.forEach((item) => (item.type = "br"));
+        brNode = brNode.constructor === Array ? brNode : [brNode]
+        brNode.forEach((item) => (item.type = 'br'))
 
-        if (brNode.length > 1) brNode.shift();
-        rNode = rNode.concat(brNode);
+        if (brNode.length > 1) brNode.shift()
+        rNode = rNode.concat(brNode)
         rNode.sort((a, b) => {
-          if (!a.attrs || !b.attrs) return true;
-          return a.attrs.order - b.attrs.order;
-        });
+          if (!a.attrs || !b.attrs) return true
+          return a.attrs.order - b.attrs.order
+        })
       }
     }
 
-    const align = getHorizontalAlign(pNode, spNode, type, warpObj);
+    const align = getHorizontalAlign(pNode, spNode, type, warpObj)
 
-    const listType = getListType(pNode);
+    const listType = getListType(pNode)
     if (listType) {
       if (!isList) {
-        text += `<${listType}>`;
-        isList = listType;
-      } else if (isList && isList !== listType) {
-        text += `</${isList}>`;
-        text += `<${listType}>`;
-        isList = listType;
+        text += `<${listType}>`
+        isList = listType
       }
-      text += `<li style="text-align: ${align};">`;
-    } else {
+      else if (isList && isList !== listType) {
+        text += `</${isList}>`
+        text += `<${listType}>`
+        isList = listType
+      }
+      text += `<li style="text-align: ${align};">`
+    }
+    else {
       if (isList) {
-        text += `</${isList}>`;
-        isList = "";
+        text += `</${isList}>`
+        isList = ''
       }
-      text += `<p style="text-align: ${align};">`;
+      text += `<p style="text-align: ${align};">`
     }
 
     if (!rNode) {
@@ -82,10 +84,11 @@ export function genTextBody(textBodyNode, spNode, slideLayoutSpNode, type, warpO
         slideLayoutSpNode,
         type,
         warpObj,
-      );
-    } else {
-      let prevStyleInfo = null;
-      let accumulatedText = "";
+      )
+    }
+    else {
+      let prevStyleInfo = null
+      let accumulatedText = ''
       for (const rNodeItem of rNode) {
         const styleInfo = getSpanStyleInfo(
           rNodeItem,
@@ -95,7 +98,7 @@ export function genTextBody(textBodyNode, spNode, slideLayoutSpNode, type, warpO
           slideLayoutSpNode,
           type,
           warpObj,
-        );
+        )
 
         if (
           !prevStyleInfo ||
@@ -105,47 +108,49 @@ export function genTextBody(textBodyNode, spNode, slideLayoutSpNode, type, warpO
         ) {
           if (accumulatedText) {
             const processedText = accumulatedText
-              .replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;")
-              .replace(/\s/g, "&nbsp;");
-            text += `<span style="${prevStyleInfo.styleText}">${processedText}</span>`;
-            accumulatedText = "";
+              .replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;')
+              .replace(/\s/g, '&nbsp;')
+            text += `<span style="${prevStyleInfo.styleText}">${processedText}</span>`
+            accumulatedText = ''
           }
 
           if (styleInfo.hasLink) {
             const processedText = styleInfo.text
-              .replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;")
-              .replace(/\s/g, "&nbsp;");
-            text += `<span style="${styleInfo.styleText}"><a href="${styleInfo.linkURL}" target="_blank">${processedText}</a></span>`;
-            prevStyleInfo = null;
-          } else {
-            prevStyleInfo = styleInfo;
-            accumulatedText = styleInfo.text;
+              .replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;')
+              .replace(/\s/g, '&nbsp;')
+            text += `<span style="${styleInfo.styleText}"><a href="${styleInfo.linkURL}" target="_blank">${processedText}</a></span>`
+            prevStyleInfo = null
           }
-        } else accumulatedText += styleInfo.text;
+          else {
+            prevStyleInfo = styleInfo
+            accumulatedText = styleInfo.text
+          }
+        }
+        else accumulatedText += styleInfo.text
       }
 
       if (accumulatedText && prevStyleInfo) {
         const processedText = accumulatedText
-          .replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;")
-          .replace(/\s/g, "&nbsp;");
-        text += `<span style="${prevStyleInfo.styleText}">${processedText}</span>`;
+          .replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;')
+          .replace(/\s/g, '&nbsp;')
+        text += `<span style="${prevStyleInfo.styleText}">${processedText}</span>`
       }
     }
 
-    if (listType) text += "</li>";
-    else text += "</p>";
+    if (listType) text += '</li>'
+    else text += '</p>'
   }
-  return text;
+  return text
 }
 
 export function getListType(node) {
-  const pPrNode = node["a:pPr"];
-  if (!pPrNode) return "";
+  const pPrNode = node['a:pPr']
+  if (!pPrNode) return ''
 
-  if (pPrNode["a:buChar"]) return "ul";
-  if (pPrNode["a:buAutoNum"]) return "ol";
+  if (pPrNode['a:buChar']) return 'ul'
+  if (pPrNode['a:buAutoNum']) return 'ol'
 
-  return "";
+  return ''
 }
 
 export function genSpanElement(
@@ -165,13 +170,13 @@ export function genSpanElement(
     slideLayoutSpNode,
     type,
     warpObj,
-  );
-  const processedText = text.replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;").replace(/\s/g, "&nbsp;");
+  )
+  const processedText = text.replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;').replace(/\s/g, '&nbsp;')
 
   if (hasLink) {
-    return `<span style="${styleText}"><a href="${linkURL}" target="_blank">${processedText}</a></span>`;
+    return `<span style="${styleText}"><a href="${linkURL}" target="_blank">${processedText}</a></span>`
   }
-  return `<span style="${styleText}">${processedText}</span>`;
+  return `<span style="${styleText}">${processedText}</span>`
 }
 
 export function getSpanStyleInfo(
@@ -183,20 +188,20 @@ export function getSpanStyleInfo(
   type,
   warpObj,
 ) {
-  const lstStyle = textBodyNode["a:lstStyle"];
-  const slideMasterTextStyles = warpObj["slideMasterTextStyles"];
+  const lstStyle = textBodyNode['a:lstStyle']
+  const slideMasterTextStyles = warpObj['slideMasterTextStyles']
 
-  let lvl = 1;
-  const pPrNode = pNode["a:pPr"];
-  const lvlNode = getTextByPathList(pPrNode, ["attrs", "lvl"]);
-  if (lvlNode !== undefined) lvl = parseInt(lvlNode) + 1;
+  let lvl = 1
+  const pPrNode = pNode['a:pPr']
+  const lvlNode = getTextByPathList(pPrNode, ['attrs', 'lvl'])
+  if (lvlNode !== undefined) lvl = parseInt(lvlNode) + 1
 
-  let text = node["a:t"];
-  if (typeof text !== "string") text = getTextByPathList(node, ["a:fld", "a:t"]);
-  if (typeof text !== "string") text = "&nbsp;";
+  let text = node['a:t']
+  if (typeof text !== 'string') text = getTextByPathList(node, ['a:fld', 'a:t'])
+  if (typeof text !== 'string') text = '&nbsp;'
 
-  let styleText = "";
-  const fontColor = getFontColor(node, pNode, lstStyle, pFontStyle, lvl, warpObj);
+  let styleText = ''
+  const fontColor = getFontColor(node, pNode, lstStyle, pFontStyle, lvl, warpObj)
   const fontSize = getFontSize(
     node,
     slideLayoutSpNode,
@@ -204,53 +209,53 @@ export function getSpanStyleInfo(
     slideMasterTextStyles,
     textBodyNode,
     pNode,
-  );
-  const fontType = getFontType(node, type, warpObj);
-  const fontBold = getFontBold(node);
-  const fontItalic = getFontItalic(node);
-  const fontDecoration = getFontDecoration(node);
-  const fontDecorationLine = getFontDecorationLine(node);
-  const fontSpace = getFontSpace(node);
-  const shadow = getFontShadow(node, warpObj);
-  const subscript = getFontSubscript(node);
+  )
+  const fontType = getFontType(node, type, warpObj)
+  const fontBold = getFontBold(node)
+  const fontItalic = getFontItalic(node)
+  const fontDecoration = getFontDecoration(node)
+  const fontDecorationLine = getFontDecorationLine(node)
+  const fontSpace = getFontSpace(node)
+  const shadow = getFontShadow(node, warpObj)
+  const subscript = getFontSubscript(node)
 
   if (fontColor) {
-    if (typeof fontColor === "string") styleText += `color: ${fontColor};`;
+    if (typeof fontColor === 'string') styleText += `color: ${fontColor};`
     else if (fontColor.colors) {
-      const { colors, rot } = fontColor;
-      const stops = colors.map((item) => `${item.color} ${item.pos}`).join(", ");
-      const gradientStyle = `linear-gradient(${rot + 90}deg, ${stops})`;
-      styleText += `background: ${gradientStyle}; background-clip: text; color: transparent;`;
+      const { colors, rot } = fontColor
+      const stops = colors.map((item) => `${item.color} ${item.pos}`).join(', ')
+      const gradientStyle = `linear-gradient(${rot + 90}deg, ${stops})`
+      styleText += `background: ${gradientStyle}; background-clip: text; color: transparent;`
     }
   }
 
-  if (fontSize) styleText += `font-size: ${fontSize};`;
-  if (fontType) styleText += `font-family: ${fontType};`;
-  if (fontBold) styleText += `font-weight: ${fontBold};`;
-  if (fontItalic) styleText += `font-style: ${fontItalic};`;
-  if (fontDecoration) styleText += `text-decoration: ${fontDecoration};`;
-  if (fontDecorationLine) styleText += `text-decoration-line: ${fontDecorationLine};`;
-  if (fontSpace) styleText += `letter-spacing: ${fontSpace};`;
-  if (subscript) styleText += `vertical-align: ${subscript};`;
-  if (shadow) styleText += `text-shadow: ${shadow};`;
+  if (fontSize) styleText += `font-size: ${fontSize};`
+  if (fontType) styleText += `font-family: ${fontType};`
+  if (fontBold) styleText += `font-weight: ${fontBold};`
+  if (fontItalic) styleText += `font-style: ${fontItalic};`
+  if (fontDecoration) styleText += `text-decoration: ${fontDecoration};`
+  if (fontDecorationLine) styleText += `text-decoration-line: ${fontDecorationLine};`
+  if (fontSpace) styleText += `letter-spacing: ${fontSpace};`
+  if (subscript) styleText += `vertical-align: ${subscript};`
+  if (shadow) styleText += `text-shadow: ${shadow};`
 
   // 渐变色
-  const rPrNode = getTextByPathList(node, ["a:rPr"]);
+  const rPrNode = getTextByPathList(node, ['a:rPr'])
   if (rPrNode) {
-    const filTyp = getFillType(rPrNode);
-    if (filTyp === "GRADIENT_FILL") {
-      const fontGradientFillStr = getGradFill(rPrNode, pNode, lstStyle, pFontStyle, lvl, warpObj);
-      styleText += fontGradientFillStr;
+    const filTyp = getFillType(rPrNode)
+    if (filTyp === 'GRADIENT_FILL') {
+      const fontGradientFillStr = getGradFill(rPrNode, pNode, lstStyle, pFontStyle, lvl, warpObj)
+      styleText += fontGradientFillStr
     }
   }
 
-  const linkID = getTextByPathList(node, ["a:rPr", "a:hlinkClick", "attrs", "r:id"]);
-  const hasLink = linkID && warpObj["slideResObj"][linkID];
+  const linkID = getTextByPathList(node, ['a:rPr', 'a:hlinkClick', 'attrs', 'r:id'])
+  const hasLink = linkID && warpObj['slideResObj'][linkID]
 
   return {
     styleText,
     text,
     hasLink,
-    linkURL: hasLink ? warpObj["slideResObj"][linkID]["target"] : null,
-  };
+    linkURL: hasLink ? warpObj['slideResObj'][linkID]['target'] : null,
+  }
 }

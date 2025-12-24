@@ -1,5 +1,5 @@
 import { RATIO_EMUs_Points } from './constants'
-import { fixedRound  } from './utils'
+import { fixedRound } from './utils'
 
 export function getPosition(slideSpNode, slideLayoutSpNode, slideMasterSpNode) {
   let off

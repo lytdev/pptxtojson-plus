@@ -310,7 +310,8 @@ export async function getSlideBackgroundFill(warpObj, uploadFun) {
     else if (bgFillTyp === 'PIC_FILL') {
       background = await getBgPicFill(bgPr, 'slideBg', warpObj, uploadFun)
       backgroundType = 'image'
-    }else if (bgFillTyp === 'PATTERN_FILL') {
+    }
+    else if (bgFillTyp === 'PATTERN_FILL') {
       const patternFill = getPatternFill(bgPr, warpObj)
       if (patternFill) {
         background = patternFill
@@ -413,7 +414,8 @@ export async function getSlideBackgroundFill(warpObj, uploadFun) {
       else if (bgFillTyp === 'PIC_FILL') {
         background = await getBgPicFill(bgPr, 'slideLayoutBg', warpObj)
         backgroundType = 'image'
-      }else if (bgFillTyp === 'PATTERN_FILL') {
+      }
+      else if (bgFillTyp === 'PATTERN_FILL') {
         const patternFill = getPatternFill(bgPr, warpObj)
         if (patternFill) {
           background = patternFill
@@ -480,13 +482,14 @@ export async function getSlideBackgroundFill(warpObj, uploadFun) {
         else if (bgFillTyp === 'PIC_FILL') {
           background = await getBgPicFill(bgFillLstIdx, 'themeBg', warpObj)
           backgroundType = 'image'
-        }else if (bgFillTyp === 'PATTERN_FILL') {
-        const patternFill = getPatternFill(bgPr, warpObj)
-        if (patternFill) {
-          background = patternFill
-          backgroundType = 'pattern'
         }
-      }
+        else if (bgFillTyp === 'PATTERN_FILL') {
+          const patternFill = getPatternFill(bgPr, warpObj)
+          if (patternFill) {
+            background = patternFill
+            backgroundType = 'pattern'
+          }
+        }
       }
     }
     else {
@@ -514,13 +517,14 @@ export async function getSlideBackgroundFill(warpObj, uploadFun) {
         else if (bgFillTyp === 'PIC_FILL') {
           background = await getBgPicFill(bgPr, 'slideMasterBg', warpObj)
           backgroundType = 'image'
-        }else if (bgFillTyp === 'PATTERN_FILL') {
-        const patternFill = getPatternFill(bgPr, warpObj)
-        if (patternFill) {
-          background = patternFill
-          backgroundType = 'pattern'
         }
-      }
+        else if (bgFillTyp === 'PATTERN_FILL') {
+          const patternFill = getPatternFill(bgPr, warpObj)
+          if (patternFill) {
+            background = patternFill
+            backgroundType = 'pattern'
+          }
+        }
       }
       else if (bgRef) {
         const phClr = getSolidFill(bgRef, clrMap, undefined, warpObj)
@@ -581,13 +585,14 @@ export async function getSlideBackgroundFill(warpObj, uploadFun) {
           else if (bgFillTyp === 'PIC_FILL') {
             background = await getBgPicFill(bgFillLstIdx, 'themeBg', warpObj)
             backgroundType = 'image'
-          }else if (bgFillTyp === 'PATTERN_FILL') {
-        const patternFill = getPatternFill(bgPr, warpObj)
-        if (patternFill) {
-          background = patternFill
-          backgroundType = 'pattern'
-        }
-      }
+          }
+          else if (bgFillTyp === 'PATTERN_FILL') {
+            const patternFill = getPatternFill(bgPr, warpObj)
+            if (patternFill) {
+              background = patternFill
+              backgroundType = 'pattern'
+            }
+          }
         }
       }
     }
@@ -635,7 +640,8 @@ export async function getShapeFill(node, pNode, isSvgMode, warpObj, source, grou
       opacity,
     }
     type = 'image'
-  }else if (fillType === 'PATTERN_FILL') {
+  }
+  else if (fillType === 'PATTERN_FILL') {
     const shpFill = node['p:spPr']['a:pattFill']
     fillValue = getPatternFill({ 'a:pattFill': shpFill }, warpObj)
     type = 'pattern'
