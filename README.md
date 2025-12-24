@@ -10,6 +10,8 @@
 > 因为看原作者时间比较忙，反馈的issues和pull requests都没有及时的修复和合并，所以自己fork了一个，并添加了一些功能。
 > 会及时跟进`pipipi-pikachu`的项目。
 
+> 最新跟进commit `62fb9503fcc8e049ad8d4730e75040ffd62c627e`
+
 #  PPTX（Office Open XML）中标签和属性的官方定义与含义
 ## 1. ECMA-376 标准
 [官网地址](https://www.ecma-international.org/publications-and-standards/standards/ecma-376/)
