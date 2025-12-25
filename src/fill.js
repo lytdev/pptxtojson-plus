@@ -31,8 +31,14 @@ export function getFillType(node) {
 
   return fillType
 }
-
-export async function getPicFill(type, node, warpObj, uploadFun) {
+/**
+ * 获取图片填充
+ * @param {*} type 
+ * @param {*} node 
+ * @param {*} warpObj 
+ * @returns 
+ */
+export async function getPicFill(type, node, warpObj) {
   if (!node) return ''
 
   let img
@@ -64,13 +70,8 @@ export async function getPicFill(type, node, warpObj, uploadFun) {
 
     const imgArrayBuffer = await warpObj['zip'].file(imgPath).async('arraybuffer')
     const imgMimeType = getMimeType(imgExt)
-    if (uploadFun) {
-      const uploadResp = await uploadFun(new Blob([imgArrayBuffer], { type: imgMimeType }), imgExt)
-      img = uploadResp.url
-    }
-    else {
-      img = `data:${imgMimeType};base64,${base64ArrayBuffer(imgArrayBuffer)}`
-    }
+    img = `data:${imgMimeType};base64,${base64ArrayBuffer(imgArrayBuffer)}`
+
     const loadedImages = warpObj['loaded-images'] || {}
     loadedImages[imgPath] = img
     warpObj['loaded-images'] = loadedImages
@@ -163,8 +164,8 @@ export function getPicFilters(node) {
   return Object.keys(filters).length > 0 ? filters : null
 }
 
-export async function getBgPicFill(bgPr, sorce, warpObj, uploadFun) {
-  const picBase64 = await getPicFill(sorce, bgPr['a:blipFill'], warpObj, uploadFun)
+export async function getBgPicFill(bgPr, sorce, warpObj) {
+  const picBase64 = await getPicFill(sorce, bgPr['a:blipFill'], warpObj)
   const aBlipNode = bgPr['a:blipFill']['a:blip']
 
   const aphaModFixNode = getTextByPathList(aBlipNode, ['a:alphaModFix', 'attrs'])
@@ -185,7 +186,7 @@ export function getGradientFill(node, warpObj) {
   for (let i = 0; i < gsLst.length; i++) {
     const lo_color = getSolidFill(gsLst[i], undefined, undefined, warpObj)
     const pos = getTextByPathList(gsLst[i], ['attrs', 'pos'])
-    
+
     colors[i] = {
       pos: pos ? (pos / 1000 + '%') : '',
       color: lo_color,
@@ -197,7 +198,7 @@ export function getGradientFill(node, warpObj) {
   if (lin) rot = angleToDegrees(lin['attrs']['ang'])
   else {
     const path = node['a:path']
-    if (path && path['attrs'] && path['attrs']['path']) pathType = path['attrs']['path'] 
+    if (path && path['attrs'] && path['attrs']['path']) pathType = path['attrs']['path']
   }
   return {
     rot,
@@ -270,7 +271,7 @@ export function getBgGradientFill(bgPr, phClr, slideMasterContent, warpObj) {
   return null
 }
 
-export async function getSlideBackgroundFill(warpObj, uploadFun) {
+export async function getSlideBackgroundFill(warpObj) {
   const slideContent = warpObj['slideContent']
   const slideLayoutContent = warpObj['slideLayoutContent']
   const slideMasterContent = warpObj['slideMasterContent']
@@ -308,7 +309,7 @@ export async function getSlideBackgroundFill(warpObj, uploadFun) {
       }
     }
     else if (bgFillTyp === 'PIC_FILL') {
-      background = await getBgPicFill(bgPr, 'slideBg', warpObj, uploadFun)
+      background = await getBgPicFill(bgPr, 'slideBg', warpObj)
       backgroundType = 'image'
     }
     else if (bgFillTyp === 'PATTERN_FILL') {
@@ -468,7 +469,7 @@ export async function getSlideBackgroundFill(warpObj, uploadFun) {
           const sldFill = bgFillLstIdx['a:solidFill']
           const sldBgClr = getSolidFill(sldFill, clrMapOvr, undefined, warpObj)
           background = sldBgClr
-        } 
+        }
         else if (bgFillTyp === 'GRADIENT_FILL') {
           const gradientFill = getBgGradientFill(bgFillLstIdx, phClr, slideMasterContent, warpObj)
           if (typeof gradientFill === 'string') {
@@ -484,7 +485,7 @@ export async function getSlideBackgroundFill(warpObj, uploadFun) {
           backgroundType = 'image'
         }
         else if (bgFillTyp === 'PATTERN_FILL') {
-          const patternFill = getPatternFill(bgPr, warpObj)
+          const patternFill = getPatternFill(bgFillLstIdx, warpObj)
           if (patternFill) {
             background = patternFill
             backgroundType = 'pattern'
@@ -571,7 +572,7 @@ export async function getSlideBackgroundFill(warpObj, uploadFun) {
             const sldFill = bgFillLstIdx['a:solidFill']
             const sldBgClr = getSolidFill(sldFill, clrMapOvr, undefined, warpObj)
             background = sldBgClr
-          } 
+          }
           else if (bgFillTyp === 'GRADIENT_FILL') {
             const gradientFill = getBgGradientFill(bgFillLstIdx, phClr, slideMasterContent, warpObj)
             if (typeof gradientFill === 'string') {
@@ -587,7 +588,7 @@ export async function getSlideBackgroundFill(warpObj, uploadFun) {
             backgroundType = 'image'
           }
           else if (bgFillTyp === 'PATTERN_FILL') {
-            const patternFill = getPatternFill(bgPr, warpObj)
+            const patternFill = getPatternFill(bgFillLstIdx, warpObj)
             if (patternFill) {
               background = patternFill
               backgroundType = 'pattern'
@@ -603,21 +604,10 @@ export async function getSlideBackgroundFill(warpObj, uploadFun) {
   }
 }
 
-/**
- * 获取形状的填充信息
- * @param {Object} node - 形状节点对象
- * @param {Object} pNode - 父节点对象
- * @param {boolean} isSvgMode - 是否为SVG模式
- * @param {Object} warpObj - 包装对象，包含各种资源和配置信息
- * @param {string} source - 资源来源类型
- * @param {Array} groupHierarchy - 组层次结构数组，默认为空数组
- * @returns {Object|string} 返回填充信息对象或字符串
- */
 export async function getShapeFill(node, pNode, isSvgMode, warpObj, source, groupHierarchy = []) {
   const fillType = getFillType(getTextByPathList(node, ['p:spPr']))
   let type = 'color'
   let fillValue = ''
-  // 根据不同的填充类型处理填充效果
   if (fillType === 'NO_FILL') {
     return isSvgMode ? 'none' : ''
   } 
@@ -649,25 +639,11 @@ export async function getShapeFill(node, pNode, isSvgMode, warpObj, source, grou
   else if (fillType === 'GROUP_FILL') {
     return findFillInGroupHierarchy(groupHierarchy, warpObj, source)
   }
-
-
-  if (!fillType || fillType === 'NO_FILL') {
-    const txBoxVal = getTextByPathList(node, ['p:nvSpPr', 'p:cNvSpPr', 'attrs', 'txBox'])
-    if (txBoxVal === '1') {
-      // 对于 文本框（txBox="1"），默认行为是 “无背景填充”（即透明）
-      return ''
-    }
-  }
-  // 当没有获取到填充值时，尝试从样式中获取填充引用
   if (!fillValue) {
     const clrName = getTextByPathList(node, ['p:style', 'a:fillRef'])
     fillValue = getSolidFill(clrName, undefined, undefined, warpObj)
-    if (fillValue) {
-      type = 'color'
-    }
+    type = 'color'
   }
-
-  // 当仍未获取到填充值且父节点存在且填充类型为无填充时，返回相应值
   if (!fillValue && pNode && fillType === 'NO_FILL') {
     return isSvgMode ? 'none' : ''
   }
@@ -675,7 +651,7 @@ export async function getShapeFill(node, pNode, isSvgMode, warpObj, source, grou
   return {
     type,
     value: fillValue,
-  } 
+  }
 }
 
 async function findFillInGroupHierarchy(groupHierarchy, warpObj, source) {
@@ -734,47 +710,34 @@ async function findFillInGroupHierarchy(groupHierarchy, warpObj, source) {
   return null
 }
 
-/**
- * 获取纯色填充的颜色值
- * @param {Object} solidFill - 包含颜色定义的对象
- * @param {Object} clrMap - 颜色映射对象
- * @param {string} phClr - 占位符颜色
- * @param {Object} warpObj - 包装对象，包含主题和其他相关信息
- * @returns {string} 返回十六进制颜色值或RGBA颜色值
- */
 export function getSolidFill(solidFill, clrMap, phClr, warpObj) {
   if (!solidFill) return ''
 
   let color = ''
   let clrNode
 
-  // 处理RGB颜色
   if (solidFill['a:srgbClr']) {
     clrNode = solidFill['a:srgbClr']
     color = getTextByPathList(clrNode, ['attrs', 'val'])
   } 
-  // 处理主题颜色方案
   else if (solidFill['a:schemeClr']) {
     clrNode = solidFill['a:schemeClr']
     const schemeClr = 'a:' + getTextByPathList(clrNode, ['attrs', 'val'])
     color = getSchemeColorFromTheme(schemeClr, warpObj, clrMap, phClr) || ''
   }
-  // 处理ScRGB颜色
   else if (solidFill['a:scrgbClr']) {
     clrNode = solidFill['a:scrgbClr']
     const defBultColorVals = clrNode['attrs']
     const red = (defBultColorVals['r'].indexOf('%') !== -1) ? defBultColorVals['r'].split('%').shift() : defBultColorVals['r']
     const green = (defBultColorVals['g'].indexOf('%') !== -1) ? defBultColorVals['g'].split('%').shift() : defBultColorVals['g']
     const blue = (defBultColorVals['b'].indexOf('%') !== -1) ? defBultColorVals['b'].split('%').shift() : defBultColorVals['b']
-    color = toHex(255 * (Number(red) / 100)) + toHex(255 * (Number(green) / 100)) + toHex(255 * (Number(blue) / 100))    
+    color = toHex(255 * (Number(red) / 100)) + toHex(255 * (Number(green) / 100)) + toHex(255 * (Number(blue) / 100))
   } 
-  // 处理预设颜色
   else if (solidFill['a:prstClr']) {
     clrNode = solidFill['a:prstClr']
     const prstClr = getTextByPathList(clrNode, ['attrs', 'val'])
     color = getColorName2Hex(prstClr)
   } 
-  // 处理HSL颜色
   else if (solidFill['a:hslClr']) {
     clrNode = solidFill['a:hslClr']
     const defBultColorVals = clrNode['attrs']
@@ -784,14 +747,12 @@ export function getSolidFill(solidFill, clrMap, phClr, warpObj) {
     const hsl2rgb = hslToRgb(hue, sat, lum)
     color = toHex(hsl2rgb.r) + toHex(hsl2rgb.g) + toHex(hsl2rgb.b)
   } 
-  // 处理系统颜色
   else if (solidFill['a:sysClr']) {
     clrNode = solidFill['a:sysClr']
     const sysClr = getTextByPathList(clrNode, ['attrs', 'lastClr'])
     if (sysClr) color = sysClr
   }
 
-  // 应用透明度效果
   let isAlpha = false
   const alpha = parseInt(getTextByPathList(clrNode, ['a:alpha', 'attrs', 'val'])) / 100000
   if (!isNaN(alpha)) {
@@ -801,83 +762,32 @@ export function getSolidFill(solidFill, clrMap, phClr, warpObj) {
     isAlpha = true
   }
 
-  // 应用色调调整
   const hueMod = parseInt(getTextByPathList(clrNode, ['a:hueMod', 'attrs', 'val'])) / 100000
   if (!isNaN(hueMod)) {
     color = applyHueMod(color, hueMod, isAlpha)
   }
-  
-  // 应用亮度调整
   const lumMod = parseInt(getTextByPathList(clrNode, ['a:lumMod', 'attrs', 'val'])) / 100000
   if (!isNaN(lumMod)) {
     color = applyLumMod(color, lumMod, isAlpha)
   }
-  
-  // 应用亮度偏移
   const lumOff = parseInt(getTextByPathList(clrNode, ['a:lumOff', 'attrs', 'val'])) / 100000
   if (!isNaN(lumOff)) {
     color = applyLumOff(color, lumOff, isAlpha)
   }
-  
-  // 应用饱和度调整
   const satMod = parseInt(getTextByPathList(clrNode, ['a:satMod', 'attrs', 'val'])) / 100000
   if (!isNaN(satMod)) {
     color = applySatMod(color, satMod, isAlpha)
   }
-  
-  // 应用阴影效果
   const shade = parseInt(getTextByPathList(clrNode, ['a:shade', 'attrs', 'val'])) / 100000
   if (!isNaN(shade)) {
     color = applyShade(color, shade, isAlpha)
   }
-  
-  // 应用高亮效果
   const tint = parseInt(getTextByPathList(clrNode, ['a:tint', 'attrs', 'val'])) / 100000
   if (!isNaN(tint)) {
     color = applyTint(color, tint, isAlpha)
   }
 
-  // 确保颜色值以#开头
   if (color && color.indexOf('#') === -1) color = '#' + color
 
   return color
-}
-
-export function createGradientText(colors, rot = 90) {
-  const gradientStops = colors
-    .map((stop) => {
-      return `${stop.color} ${stop.pos}`
-    })
-    .join(', ')
-
-  const gradientStyle = `linear-gradient(${rot}deg, ${gradientStops})`
-
-  return `background: ${gradientStyle};
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    color: transparent;`
-}
-export function getGradFill(solidFill, clrMap, phClr, warpObj) {
-  const grdFill = solidFill['a:gradFill']
-  const gsLst = grdFill['a:gsLst']['a:gs']
-  const color_ary = []
-
-  for (let i = 0; i < gsLst.length; i++) {
-    const lo_color = getSolidFill(gsLst[i], clrMap, phClr, warpObj)
-    const pos = getTextByPathList(gsLst[i], ['attrs', 'pos'])
-
-    color_ary[i] = {
-      pos: pos ? pos / 1000 + '%' : '',
-      color: lo_color,
-    }
-  }
-  const lin = grdFill['a:lin']
-  let rot = 90
-  if (lin) {
-    rot = angleToDegrees(lin['attrs']['ang'])
-    rot = rot + 90
-  }
-  const colors = color_ary.sort((a, b) => parseInt(a.pos) - parseInt(b.pos))
-  return createGradientText(colors, rot)
 }
