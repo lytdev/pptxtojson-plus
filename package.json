@@ -1,6 +1,6 @@
 {
 	"name": "pptxtojson-plus",
-	"version": "1.9.3",
+	"version": "1.9.4",
 	 "files": ["dist"],
 	"description": "A javascript tool for parsing .pptx file",
 	"type": "module",
